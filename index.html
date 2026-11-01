@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Open in Messages</title>
+<style>
+  body{font:17px -apple-system,system-ui,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f2f2f7}
+  a{display:block;padding:18px 28px;border-radius:14px;background:#34c759;color:#fff;text-decoration:none;font-weight:600;font-size:20px}
+  p{color:#8e8e93;text-align:center;font-size:14px}
+</style>
+</head>
+<body>
+<div>
+  <a id="go" href="#">Open in Messages</a>
+  <p id="msg"></p>
+</div>
+<script>
+  // The handle lives only in the #fragment (?h is not used), so it is never sent to the server.
+  var h = decodeURIComponent((location.hash || "").slice(1)).trim();
+  var ok = /^\+?[0-9]{6,15}$/.test(h) || /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(h);
+  var go = document.getElementById("go");
+  if (ok) {
+    var url = "sms:" + h;
+    go.href = url;
+    location.replace(url);
+  } else {
+    go.style.display = "none";
+    document.getElementById("msg").textContent = "No valid contact in this link.";
+  }
+</script>
+</body>
+</html>
