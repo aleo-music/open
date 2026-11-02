@@ -28,19 +28,27 @@
   function fail(t) { document.getElementById("msg").textContent = t; }
 
   if (raw.indexOf("gm/") === 0) {
+    // #gm/<thread hex>/<message-id>[|<search text>]   (search text optional, e.g. the subject)
     document.title = "Open in Gmail";
-    var parts = raw.slice(3).split("/");
+    var bar = raw.indexOf("|");
+    var q = bar >= 0 ? raw.slice(bar + 1).trim() : "";
+    var parts = (bar >= 0 ? raw.slice(3, bar) : raw.slice(3)).split("/");
     var thr = parts[0] || "", mid = parts.slice(1).join("/");
     var thrOk = /^[0-9a-f]{8,20}$/.test(thr);
     var midOk = /^[^\s<>"]{3,250}$/.test(mid);
-    if (!thrOk && !midOk) { fail("No valid email in this link."); }
+    if (!thrOk && !midOk && !q) { fail("No valid email in this link."); }
     else {
-      var app = thrOk ? "googlegmail:///cv=" + thr + "/accountId=1&create-new-tab" : "googlegmail://";
-      btn("Open in Gmail app", app);
+      var e = encodeURIComponent;
+      var subj = q ? 'subject:"' + q.replace(/"/g, "") + '"' : "";
+      var idq = midOk ? "rfc822msgid:" + mid : "";
+      // Test mode: which Gmail-app search link does this phone understand? (no auto-redirect)
+      if (subj) btn("A · app search (subject)", "googlegmail:///search?q=" + e(subj));
+      if (idq) btn("B · app search (message id)", "googlegmail:///search?q=" + e(idq));
+      if (subj) btn("C · app search, other form", "googlegmail://search?q=" + e(subj));
+      if (subj) btn("D · app search, path form", "googlegmail:///search/" + e(subj));
       btn("Gmail app (inbox)", "googlegmail://", true);
-      if (midOk) btn("Open in Safari", "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" + encodeURIComponent(mid), true);
-      else if (thrOk) btn("Open in Safari", "https://mail.google.com/mail/u/0/#all/" + thr, true);
-      location.replace(app);
+      if (midOk) btn("Open in Safari", "https://mail.google.com/mail/u/0/#search/" + e(idq), true);
+      fail("Tap A, then come back and try B, C, D. Tell me which one lands on the email.");
     }
   } else {
     var ok = /^\+?[0-9]{6,15}$/.test(raw) || /^[^\s@<>"\/]+@[^\s@<>"\/]+\.[^\s@<>"\/]+$/.test(raw);
