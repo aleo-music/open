@@ -27,7 +27,15 @@
   }
   function fail(t) { document.getElementById("msg").textContent = t; }
 
-  if (raw.indexOf("gm/") === 0) {
+  if (raw.indexOf("tel/") === 0) {
+    // #tel/<phone> : place a phone call
+    var ph = raw.slice(4);
+    if (/^\+?[0-9]{6,15}$/.test(ph)) {
+      document.title = "Call";
+      btn("Call " + ph, "tel:" + ph);
+      location.replace("tel:" + ph);
+    } else { fail("No valid phone number in this link."); }
+  } else if (raw.indexOf("gm/") === 0) {
     // #gm/... : open the Gmail app (it can't open a specific email from a link)
     document.title = "Open in Gmail";
     btn("Open Gmail app", "googlegmail://");
