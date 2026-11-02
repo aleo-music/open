@@ -28,21 +28,19 @@
   function fail(t) { document.getElementById("msg").textContent = t; }
 
   if (raw.indexOf("gm/") === 0) {
-    // #gm/<gmail thread id hex>/<message-id>[|subject]
+    // #gm/... : open the Gmail app (it can't open a specific email from a link)
     document.title = "Open in Gmail";
-    var bar = raw.indexOf("|");
-    var thr = (bar >= 0 ? raw.slice(3, bar) : raw.slice(3)).split("/")[0] || "";
-    if (/^[0-9a-f]{8,20}$/.test(thr)) {
-      var web = "https://mail.google.com/mail/u/0/#inbox/" + thr;
-      // x-safari-https:// makes iOS open the link in Safari itself (not Telegram's built-in browser)
-      btn("Open in Safari", "x-safari-" + web);
-      btn("Open in this browser", web, true);
-      btn("Gmail app (inbox)", "googlegmail://", true);
-      location.replace("x-safari-" + web);
-    } else {
-      btn("Gmail app (inbox)", "googlegmail://");
-      fail("No thread id in this link. Search the subject shown on the card.");
-    }
+    btn("Open Gmail app", "googlegmail://");
+    location.replace("googlegmail://");
+  } else if (raw.indexOf("mail/") === 0) {
+    // #mail/<message-id> : open that exact email in Apple Mail
+    document.title = "Open in Mail";
+    var mid = raw.slice(5).replace(/^<|>$/g, "");
+    if (/^[^\s<>"\/]{3,250}@[^\s<>"\/]+$/.test(mid)) {
+      var url = "message://" + encodeURIComponent("<" + mid + ">");
+      btn("Open in Mail", url);
+      location.replace(url);
+    } else { fail("No valid email in this link."); }
   } else {
     var ok = /^\+?[0-9]{6,15}$/.test(raw) || /^[^\s@<>"\/]+@[^\s@<>"\/]+\.[^\s@<>"\/]+$/.test(raw);
     if (ok) {
