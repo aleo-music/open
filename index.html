@@ -5,30 +5,51 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
-<title>Open in Messages</title>
+<title>Open</title>
 <style>
   body{font:17px -apple-system,system-ui,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f2f2f7}
-  a{display:block;padding:18px 28px;border-radius:14px;background:#34c759;color:#fff;text-decoration:none;font-weight:600;font-size:20px}
+  a{display:block;margin:10px auto;padding:16px 26px;border-radius:14px;background:#34c759;color:#fff;text-decoration:none;font-weight:600;font-size:19px;text-align:center}
+  a.alt{background:#fff;color:#007aff;font-weight:500;font-size:16px}
   p{color:#8e8e93;text-align:center;font-size:14px}
 </style>
 </head>
 <body>
-<div>
-  <a id="go" href="#">Open in Messages</a>
-  <p id="msg"></p>
-</div>
+<div id="box"><p id="msg"></p></div>
 <script>
-  // The handle lives only in the #fragment (?h is not used), so it is never sent to the server.
-  var h = decodeURIComponent((location.hash || "").slice(1)).trim();
-  var ok = /^\+?[0-9]{6,15}$/.test(h) || /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(h);
-  var go = document.getElementById("go");
-  if (ok) {
-    var url = "sms:" + h;
-    go.href = url;
-    location.replace(url);
+  // Everything lives in the #fragment, which browsers never send to the server.
+  //   #<phone or email>                     -> iMessage (sms:)
+  //   #gm/<gmail thread id hex>/<message-id> -> Gmail app (thread), with fallbacks
+  var raw = decodeURIComponent((location.hash || "").slice(1)).trim();
+  var box = document.getElementById("box");
+  function btn(label, url, alt) {
+    var a = document.createElement("a"); a.textContent = label; a.href = url; if (alt) a.className = "alt";
+    box.insertBefore(a, document.getElementById("msg")); return a;
+  }
+  function fail(t) { document.getElementById("msg").textContent = t; }
+
+  if (raw.indexOf("gm/") === 0) {
+    document.title = "Open in Gmail";
+    var parts = raw.slice(3).split("/");
+    var thr = parts[0] || "", mid = parts.slice(1).join("/");
+    var thrOk = /^[0-9a-f]{8,20}$/.test(thr);
+    var midOk = /^[^\s<>"]{3,250}$/.test(mid);
+    if (!thrOk && !midOk) { fail("No valid email in this link."); }
+    else {
+      var app = thrOk ? "googlegmail:///cv=" + thr + "/accountId=1&create-new-tab" : "googlegmail://";
+      btn("Open in Gmail app", app);
+      btn("Gmail app (inbox)", "googlegmail://", true);
+      if (midOk) btn("Open in Safari", "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" + encodeURIComponent(mid), true);
+      else if (thrOk) btn("Open in Safari", "https://mail.google.com/mail/u/0/#all/" + thr, true);
+      location.replace(app);
+    }
   } else {
-    go.style.display = "none";
-    document.getElementById("msg").textContent = "No valid contact in this link.";
+    var ok = /^\+?[0-9]{6,15}$/.test(raw) || /^[^\s@<>"\/]+@[^\s@<>"\/]+\.[^\s@<>"\/]+$/.test(raw);
+    if (ok) {
+      document.title = "Open in Messages";
+      var url = "sms:" + raw;
+      btn("Open in Messages", url);
+      location.replace(url);
+    } else { fail("No valid contact in this link."); }
   }
 </script>
 </body>
