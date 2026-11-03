@@ -27,7 +27,27 @@
   }
   function fail(t) { document.getElementById("msg").textContent = t; }
 
-  if (raw.indexOf("tel/") === 0) {
+  // #app/<key> : open a bank/card app (fixed list, no arbitrary schemes)
+  var APPS = {
+    capitalone: ["Capital One", "capitalone://", "https://apps.apple.com/app/id407558537"],
+    chase: ["Chase", "chase://", "https://apps.apple.com/app/id298867247"],
+    amex: ["Amex", "amex://", "https://apps.apple.com/app/id362348516"],
+    bofa: ["Bank of America", "bofa://", "https://apps.apple.com/app/id284847138"],
+    discover: ["Discover", "discover://", "https://apps.apple.com/app/id338010821"],
+    citi: ["Citi", "citimobile://", "https://apps.apple.com/app/id301724680"],
+    wellsfargo: ["Wells Fargo", "wellsfargo://", "https://apps.apple.com/app/id311548709"],
+    barclays: ["Barclays US", "barclaysus://", "https://apps.apple.com/app/id1102342040"],
+    applecard: ["Wallet", "shoebox://", ""]
+  };
+  if (raw.indexOf("app/") === 0) {
+    var ap = APPS[raw.slice(4)];
+    if (ap) {
+      document.title = "Open " + ap[0];
+      btn("Open " + ap[0], ap[1]);
+      if (ap[2]) btn("Get it on the App Store", ap[2], true);
+      location.replace(ap[1]);
+    } else { fail("Unknown app in this link."); }
+  } else if (raw.indexOf("tel/") === 0) {
     // #tel/<phone> : place a phone call
     var ph = raw.slice(4);
     if (/^\+?[0-9]{6,15}$/.test(ph)) {
